@@ -46,6 +46,8 @@ EXPOSE 6379
 EXPOSE 6379/udp
 
 COPY --from=keydb-compiler /usr/local/bin/keydb-server /usr/local/bin/keydb-server
+COPY --from=keydb-compiler /usr/local/src/datamkown /usr/local/bin/datamkown
+
 COPY --from=keydb-multi-master-bundler /opt/keydb-multi-master /usr/local/bin/keydb-multi-master
 
 STOPSIGNAL SIGTERM
