@@ -1,0 +1,26 @@
+{
+  "name": "keydb-multi-master",
+  "version": "1.0.0",
+  "description": "Multi-master KeyDB replication with automatic discovery in Docker Swarm",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stevecorya/keydb-multi-master.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/stevecorya/keydb-multi-master/issues"
+  },
+  "homepage": "https://github.com/stevecorya/keydb-multi-master#readme",
+  "dependencies": {
+    "@emmsdan/network-address": "^0.0.2",
+    "get-input": "^0.1.3",
+    "ip": "^1.1.5",
+    "node-discover": "^1.2.1"
+  }
+}
