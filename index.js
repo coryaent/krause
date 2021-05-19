@@ -37,6 +37,7 @@ log.info ('Spawning KeyDB server...');
 KeyDB = spawn ('keydb-server', [
     '--bind', '0.0.0.0', 
     '--active-replica', 'yes',
+    '--replica-read-only', 'no',
     '--multi-master', 'yes',
     '--databases', '1',
     '--dir', '/data',
@@ -64,7 +65,7 @@ connect ({
         const broadcast = ip.cidrSubnet (Input.masterNetwork).broadcastAddress;
         const address = getMasterNetAdd ();
         log.info (`Starting automatic discovery broadcasting to ${broadcast} from ${address}...`);
-        Discovery = discover ({
+        Discovery = new discover ({
             // options
             broadcast,
             port,
