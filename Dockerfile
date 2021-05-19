@@ -50,7 +50,7 @@ COPY --from=keydb-compiler /usr/local/src/datamkown /usr/local/bin/datamkown
 
 COPY --from=keydb-multi-master-bundler /opt/keydb-multi-master /usr/local/bin/keydb-multi-master
 
-RUN	apt-get install -y libcurl4
+RUN	apt-get update && apt-get install -y libcurl4
 
 STOPSIGNAL SIGTERM
 
