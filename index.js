@@ -4,7 +4,7 @@
     PRE-REQUISITES
 */
 const { execFileSync, spawn } = require ('child_process');
-const connect = require ('wait-for-socket').waitForSocket;
+const connect = require ('socket-retry-connect').waitForSocket;
 const discover = require ('node-discover');
 const ip = require ('ip');
 const Input = require ('./input.js');
