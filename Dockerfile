@@ -25,22 +25,25 @@ RUN apt-get update && apt-get install -y \
 	cp src/keydb-* /usr/local/bin/
 
 # Node.js
-FROM node:lts-buster AS keydb-multi-master-bundler
+# FROM node:lts-buster AS keydb-multi-master-bundler
 
-WORKDIR /opt
+# WORKDIR /opt
 
-COPY package*.json ./
-COPY . .
+# COPY package*.json ./
+# COPY . .
 
-RUN npm install && \
-    npm install --global pkg && \
-    pkg index.js -o ./keydb-multi-master
+# RUN npm install && \
+#     npm install --global pkg && \
+#     pkg index.js -o ./keydb-multi-master
 
 
 #####################
 # primary container #
 #####################
-FROM debian:buster-slim
+# FROM debian:buster-slim
+FROM node:lts-buster
+
+WORKDIR /usr/local/src
 
 EXPOSE 6379/tcp
 EXPOSE 6379/udp
@@ -49,10 +52,11 @@ COPY --from=keydb-compiler /usr/local/bin/keydb-server /usr/local/bin/keydb-serv
 COPY --from=keydb-compiler /usr/local/bin/keydb-cli /usr/local/bin/keydb-cli
 COPY --from=keydb-compiler /usr/local/src/datamkown /usr/local/bin/datamkown
 
-COPY --from=keydb-multi-master-bundler /opt/keydb-multi-master /usr/local/bin/keydb-multi-master
+# COPY --from=keydb-multi-master-bundler /opt/keydb-multi-master /usr/local/bin/keydb-multi-master
+COPY . .
 
 RUN	apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils
 
 STOPSIGNAL SIGTERM
 
-ENTRYPOINT keydb-multi-master
+CMD ["./index.js"]
