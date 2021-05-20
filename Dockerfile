@@ -48,6 +48,8 @@ WORKDIR /usr/local/src
 EXPOSE 6379/tcp
 EXPOSE 6379/udp
 
+STOPSIGNAL SIGTERM
+
 COPY --from=keydb-compiler /usr/local/bin/keydb-server /usr/local/bin/keydb-server
 COPY --from=keydb-compiler /usr/local/bin/keydb-cli /usr/local/bin/keydb-cli
 COPY --from=keydb-compiler /usr/local/src/datamkown /usr/local/bin/datamkown
@@ -55,8 +57,7 @@ COPY --from=keydb-compiler /usr/local/src/datamkown /usr/local/bin/datamkown
 # COPY --from=keydb-multi-master-bundler /opt/keydb-multi-master /usr/local/bin/keydb-multi-master
 COPY . .
 
-RUN	apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils
-
-STOPSIGNAL SIGTERM
+RUN	apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils && \
+	npm install
 
 ENTRYPOINT node ./index.js
