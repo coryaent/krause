@@ -66,14 +66,14 @@ connect ({
         discovery = setInterval (async function discover () {
             const tasks = (await dig ([question]))['answer'].map (a => a['value']);
             // contrast tasks and peers
-            tasks.forEach (task => {
+            for (let task of tasks) {
                 if (!peers.has (task)) {
                     log.info (`Found new peer at ${task}, adding replica...`);
                     await keydb.write (`REPLICAOF ${task} ${port}\n`);
                     peers.add (task);
                     log.info (`Peer at ${task} successfully replicated.`);
                 }
-            });
+            }
             // cleanup lost peers
             peers.forEach (peer => {
                 if (!tasks.has (peer)) {
