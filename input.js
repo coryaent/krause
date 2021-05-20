@@ -42,9 +42,7 @@ module.exports = {
     get masterNetwork () {
         return getInput ({
             envKey: ['KEYDB_MASTER_NETWORK'],
-            argvKey: ['-keydb-master-network', '--keydb-master-network'],
-            endMark: '--',
-            priority: 'argv',
+            priority: 'env',
             required: 'Docker network over which KeyDB instances will\
             communicate, in CIDR nodation.'
         })

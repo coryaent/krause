@@ -5,9 +5,7 @@
 */
 const { execFileSync, spawn } = require ('child_process');
 const connect = require ('socket-retry-connect').waitForSocket;
-const discover = require ('node-discover');
-const ip = require ('ip');
-const Input = require ('./input.js');
+const dig = require ('node-dig-dns');
 const log = require ('./logger.js');
 
 /*
@@ -24,13 +22,13 @@ process.on ('SIGINT', () => {
 process.on ('SIGTERM', () => {
     if (KeyDB) KeyDB.kill ();
     if (keydb) keydb.close ();
-    if (Discovery) Discovery.stop ();
+    if (discovery) clearInterval (discovery);
 });
 
 /*
     MAIN
 */
-var KeyDB, keydb, Discovery = null;
+var KeyDB, keydb, discovery = null;
 
 // server
 log.info ('Spawning KeyDB server...');
@@ -62,35 +60,28 @@ connect ({
         });
 
         // automatic discovery
-        const broadcast = ip.cidrSubnet (Input.masterNetwork).broadcastAddress;
-        const address = getMasterNetAdd ();
-        log.info (`Starting automatic discovery broadcasting to ${broadcast} from ${address}...`);
-        Discovery = new discover ({
-            // options
-            broadcast,
-            port,
-            address
-        },
-            // callback
-            (error) => {
-                if (error) throw new Error;
-                log.info ('Automatic discovery started successfully.');
-            }
-        )
-        .on ('added', (peer) => {
-            log.info (`Found peer at ${peer.address}.`);
-            const cmd = `REPLICAOF ${peer.address} ${peer.port}`;
-            log.info (`Setting ${cmd}...`);
-            keydb.write (cmd + '\n');
-        });
+        const question = 'tasks.' + process.env.SERVICE_NAME + '.';
+        const peers = new Set ();
+        log.info (`Starting DNS discovery at ${question}`);
+        discovery = setInterval (async function discover () {
+            const tasks = (await dig ([question]))['answer'].map (a => a['value']);
+            // contrast tasks and peers
+            tasks.forEach (task => {
+                if (!peers.has (task)) {
+                    log.info (`Found new peer at ${task}, adding replica...`);
+                    await keydb.write (`REPLICAOF ${task} ${port}\n`);
+                    peers.add (task);
+                    log.info (`Peer at ${task} successfully replicated.`);
+                }
+            });
+            // cleanup lost peers
+            peers.forEach (peer => {
+                if (!tasks.has (peer)) {
+                    peers.delete (peer);
+                    log.warn (`Peer at ${task} lost.`);
+                }
+            })
+        }, 1000);
+        
     }
 )
-
-/*
-    AUXILIARY
-*/
-function getMasterNetAdd () {
-    return require ('@emmsdan/network-address').v4.find ((address) => {
-        return ip.cidrSubnet (Input.masterNetwork).contains (address);
-    });
-}

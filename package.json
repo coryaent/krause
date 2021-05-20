@@ -23,6 +23,7 @@
     "fast-date-format": "^2.2.4",
     "get-input": "^0.1.3",
     "ip": "^1.1.5",
+    "node-dig-dns": "^0.2.12",
     "node-discover": "^1.2.1",
     "socket-retry-connect": "^0.0.1"
   }
