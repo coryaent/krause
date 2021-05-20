@@ -76,7 +76,7 @@ connect ({
             }
             // cleanup lost peers
             peers.forEach (peer => {
-                if (!tasks.has (peer)) {
+                if (!tasks.includes (peer)) {
                     peers.delete (peer);
                     log.warn (`Peer at ${task} lost.`);
                 }
