@@ -59,4 +59,4 @@ RUN	apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils
 
 STOPSIGNAL SIGTERM
 
-CMD ["./index.js"]
+ENTRYPOINT node ./index.js
