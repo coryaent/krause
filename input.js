@@ -28,7 +28,7 @@ function getInput (param) {
     else if (param.required)
         throw new InputError (param.required);
         else 
-        return undefined;
+        return null;
 }
 
 class InputError extends Error {

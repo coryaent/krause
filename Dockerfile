@@ -6,6 +6,7 @@ WORKDIR /usr/local/src
 COPY ./datamkown.c ./
 
 RUN apt-get update && apt-get install -y \
+	--no-install-recommends \
 	build-essential \
 	nasm \
 	autotools-dev \
@@ -16,6 +17,8 @@ RUN apt-get update && apt-get install -y \
 	libssl-dev \
 	libcurl4-openssl-dev \
 	wget && \
+	apt-get clean && \
+	rm -rf /var/lib/apt/lists/* && \
 	gcc datamkown.c -o ./datamkown && chmod ug+s ./datamkown && \
 	VERSION="6.0.16" && \
 	wget "https://github.com/EQ-Alpha/KeyDB/archive/refs/tags/v${VERSION}.tar.gz" && \
