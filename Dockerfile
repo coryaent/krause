@@ -6,7 +6,6 @@ WORKDIR /usr/local/src
 COPY ./datamkown.c ./
 
 RUN apt-get update && apt-get install -y \
-	--no-install-recommends \
 	build-essential \
 	nasm \
 	autotools-dev \
