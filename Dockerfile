@@ -1,5 +1,5 @@
 # KeyDB
-FROM debian:buster AS keydb-compiler
+FROM debian:bullseye AS keydb-compiler
 
 WORKDIR /usr/local/src
 
@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/* && \
 	gcc datamkown.c -o ./datamkown && chmod ug+s ./datamkown && \
-	VERSION="6.0.18 && \
+	VERSION="6.2.0 && \
 	wget "https://github.com/EQ-Alpha/KeyDB/archive/refs/tags/v${VERSION}.tar.gz" && \
 	tar xvf "v${VERSION}.tar.gz" && \
 	cd "KeyDB-${VERSION}" && \
