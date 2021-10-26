@@ -71,7 +71,7 @@ connect ({
                     log.info (`Found new peer at ${task}, adding replica...`);
                     await keydb.write (`REPLICAOF ${task} ${port}\n`);
                     peers.add (task);
-                    log.info (`Peer at ${task} successfully replicated.`);
+                    log.info (`Peer at ${task} successfully added as a replica, data may still be transferring.`);
                 }
             }
             // cleanup lost peers
