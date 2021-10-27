@@ -26,24 +26,12 @@ RUN VERSION="6.2.0" && \
 	make BUILD_TLS=yes && \
 	cp src/keydb-* /usr/local/bin/
 
-# Node.js
-# FROM node:lts-buster AS keydb-multi-master-bundler
-
-# WORKDIR /opt
-
-# COPY package*.json ./
-# COPY . .
-
-# RUN npm install && \
-#     npm install --global pkg && \
-#     pkg index.js -o ./keydb-multi-master
 
 
 #####################
 # primary container #
 #####################
-# FROM debian:buster-slim
-FROM node:12-bullseye-slim
+FROM node:lts-bullseye-slim
 
 WORKDIR /usr/local/src
 
@@ -56,10 +44,9 @@ COPY --from=keydb-compiler /usr/local/bin/keydb-server /usr/local/bin/keydb-serv
 COPY --from=keydb-compiler /usr/local/bin/keydb-cli /usr/local/bin/keydb-cli
 COPY --from=keydb-compiler /usr/local/src/datamkown /usr/local/bin/datamkown
 
-# COPY --from=keydb-multi-master-bundler /opt/keydb-multi-master /usr/local/bin/keydb-multi-master
 COPY . .
 
-RUN	apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils && \
+RUN apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils && \
 	npm install
 
 ENTRYPOINT node ./index.js
