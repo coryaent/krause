@@ -43,7 +43,7 @@ RUN VERSION="6.2.0" && \
 # primary container #
 #####################
 # FROM debian:buster-slim
-FROM node:lts-bullseye
+FROM node:12-bullseye-slim
 
 WORKDIR /usr/local/src
 
