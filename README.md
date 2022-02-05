@@ -13,7 +13,7 @@ Keyj enables automatic discovery by querying Swarm's DNS server for a lookup of 
 
 ## Example
 ```yaml
-version: '3.8
+version: '3.8'
 
 services:
   master: 
