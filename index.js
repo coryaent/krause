@@ -11,7 +11,6 @@ const log = require ('./logger.js');
 /*
     REQUIREMENTS
 */
-const port = 6379;
 
 execFileSync ('datamkown');
 
@@ -25,12 +24,22 @@ process.on ('SIGTERM', () => {
     if (discovery) clearInterval (discovery);
 });
 
+log.debug ('process.argv:', process.argv);
+log.debug ('Parsing arguments');
+const argv = require ('minimist') (process.argv.slice (2), {
+  default: {
+    port: 6379,
+    interval: 1000
+  }
+});
+log.debug ('argv:', argv);
+
 /*
     MAIN
 */
 var KeyDB, keydb, discovery = null;
 
-// server
+// server instance
 log.info ('Spawning KeyDB server...');
 KeyDB = spawn ('keydb-server', [
     '--bind', '0.0.0.0', 
@@ -39,6 +48,7 @@ KeyDB = spawn ('keydb-server', [
     '--multi-master', 'yes',
     '--databases', '1',
     '--dir', '/data',
+    '--port', argv.port
 ], { stdio: ['ignore', 'inherit', 'inherit'] });
 
 // client
@@ -46,7 +56,7 @@ log.info ('Connecting as KeyDB client...');
 connect ({
     // options
     tries: Infinity,
-    port
+    port: argv.port
 }, 
     // callback
     function start (error, connection) {
@@ -69,7 +79,7 @@ connect ({
             for (let task of tasks) {
                 if (!peers.has (task)) {
                     log.info (`Found new peer at ${task}, adding replica...`);
-                    await keydb.write (`REPLICAOF ${task} ${port}\n`);
+                    await keydb.write (`REPLICAOF ${task} ${argv.port}\n`);
                     peers.add (task);
                     log.info (`Peer at ${task} successfully added as a replica, data may still be transferring.`);
                 }
@@ -81,7 +91,7 @@ connect ({
                     log.warn (`Peer at ${task} lost.`);
                 }
             })
-        }, 1000);
+        }, argv.interval);
         
     }
 )
