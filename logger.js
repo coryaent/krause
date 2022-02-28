@@ -7,4 +7,5 @@ module.exports = require ('console-log-level') ({
     prefix: function (level) {
         return `[KDBMM] ${dateFormat.format (new Date ())} [${level.toUpperCase ()}]`
     },
+    level: process.argv.includes ('--debug') ? 'debug' : 'info'
 });
