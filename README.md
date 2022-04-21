@@ -17,7 +17,7 @@ version: '3.8'
 
 services:
   master: 
-    image: stevecorya/keydb-multi-master
+    image: stevecorya/keyj
     environment:
       - SERVICE_NAME={{.Service.Name}}  
     networks:
@@ -27,17 +27,10 @@ services:
       - data:/data
     deploy:
       mode: global
-      placement:
-        constraints:
-          - node.labels.keydb == master
 
 networks:
   keydb:
     external: true
-  replication:
-    driver: overlay
-    driver_opts:
-      encrypted: "true"
 
 volumes:
   data:
