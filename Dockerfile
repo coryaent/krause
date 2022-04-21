@@ -36,7 +36,6 @@ FROM node:lts-bullseye-slim
 WORKDIR /usr/local/src
 
 EXPOSE 6379/tcp
-EXPOSE 6379/udp
 
 STOPSIGNAL SIGTERM
 
