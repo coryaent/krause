@@ -21,7 +21,7 @@
     "console-log-level": "^1.4.1",
     "fast-date-format": "^2.2.4",
     "get-input": "^0.1.3",
-    "minimist": "^1.2.5",
+    "minimist": "^1.2.6",
     "node-dig-dns": "^0.2.12",
     "socket-retry-connect": "^0.0.1"
   }
