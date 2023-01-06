@@ -1,7 +1,6 @@
 # Keyj
 
 [![Codacy grade](https://img.shields.io/codacy/grade/62ddb4351baf4fff8c0aec3c9d71d969?style=flat-square)](https://app.codacy.com/gh/stevecorya/keyj/dashboard)
-![Libraries.io dependency status for GitHub repo](https://img.shields.io/librariesio/github/shcorya/keyj?style=flat-square)
 [![Docker image size](https://img.shields.io/docker/image-size/stevecorya/keyj?style=flat-square)](https://hub.docker.com/r/stevecorya/keyj)
 
 Keyj /kidʒ/ allows one to easily setup an eventually consistent, highly available, Redis-compatible datastore.
