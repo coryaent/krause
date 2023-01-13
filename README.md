@@ -23,7 +23,6 @@ services:
       - SERVICE_NAME={{.Service.Name}}  
     networks:
       - keydb
-      - replication
     volumes:
       - data:/data
     deploy:
