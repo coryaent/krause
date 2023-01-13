@@ -10,6 +10,8 @@ Keyj /kidʒ/ allows one to easily setup an eventually consistent, highly availab
 
 Keyj enables automatic discovery by querying Swarm's DNS server for a lookup of ```tasks.<service-name>.``` 
 
+In terms of CAP theorem, keyj is available and partition tolerant. It is not gaurenteed to be consistent.
+
 ## Example
 ```yaml
 version: '3.8'
