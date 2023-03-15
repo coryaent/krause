@@ -23,15 +23,10 @@ services:
       - SERVICE_NAME={{.Service.Name}}  
     networks:
       - keydb
-    volumes:
-      - data:/data
     deploy:
       mode: global
 
 networks:
   keydb:
     external: true
-
-volumes:
-  data:
 ```
