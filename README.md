@@ -1,9 +1,9 @@
-# Keyj
+# Keyes
 
 [![Codacy grade](https://img.shields.io/codacy/grade/62ddb4351baf4fff8c0aec3c9d71d969?style=flat-square)](https://app.codacy.com/gh/stevecorya/keyj/dashboard)
 [![Docker image size](https://img.shields.io/docker/image-size/stevecorya/keyj?style=flat-square)](https://hub.docker.com/r/stevecorya/keyj)
 
-Keyj /kidʒ/ allows one to easily setup an eventually consistent, highly available, Redis-compatible datastore.
+Keyes allows one to easily setup an eventually consistent, highly available, Redis-compatible datastore.
 
 ## Overview
 [KeyDB](https://keydb.dev/) is a fork of [Redis](https://redis.io/) which strives to maintain 100% compatibility with the Redis wire protocol. Keyj is a script which assists with running KeyDB on multiple nodes within Docker Swarm by adding automatic discovery to KeyDB.
