@@ -7,7 +7,6 @@ COPY ./datamkown.c ./
 
 RUN VERSION="6.2.0" && \
 	apt-get update && apt-get install -y \
-	redis-tools \
 	build-essential \
 	nasm \
 	autotools-dev \
@@ -46,7 +45,7 @@ COPY --from=keydb-compiler /usr/local/src/datamkown /usr/local/bin/datamkown
 
 COPY . .
 
-RUN apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils && \
+RUN apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils redis-tools && \
 	npm install
 
 ENTRYPOINT node ./index.js
