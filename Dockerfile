@@ -7,6 +7,7 @@ COPY ./datamkown.c ./
 
 RUN VERSION="6.2.0" && \
 	apt-get update && apt-get install -y \
+	redis-tools \
 	build-essential \
 	nasm \
 	autotools-dev \
