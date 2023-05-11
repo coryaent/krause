@@ -54,9 +54,11 @@ for (let device of Object.keys (interfaces)) {
 const peers = new Set ();
 // get ip tasks from domain
 const endpoint = 'tasks.' + process.env.SERVICE_NAME + '.';
+log.debug ('Hitting endpoint ' + endpoint + ' ...');
 // automatic discovery
 (function discover () {
     dns.lookup(endpoint, {family: 4}).then (async function main (discovered) {
+        log.debug ('Hit ' + endpoint);
         // add peers from found tasks
         const tasks = [];
         Object.keys (discovered).forEach ((key) => {
@@ -90,9 +92,6 @@ const endpoint = 'tasks.' + process.env.SERVICE_NAME + '.';
             }
         };
         log.debug (`Found ${peers.size} peer(s)`);
-    })
-    .catch((error) => {
-        log.error (error);
     });
     discovery = setInterval (discover, argv.interval);
 }) ();
