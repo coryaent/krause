@@ -53,7 +53,7 @@ for (let device of Object.keys (interfaces)) {
 // peers is a set of tasks without this instance's IP's
 const peers = new Set ();
 // get ip tasks from domain
-const question = 'tasks.' + process.env.SERVICE_NAME + '.']);
+const question = 'tasks.' + process.env.SERVICE_NAME + '.';
 // automatic discovery
 (function discover () {
     dig([question]).then (async function main (discovered) {
