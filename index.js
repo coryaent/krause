@@ -29,7 +29,7 @@ log.debug ('Parsing arguments');
 const argv = require ('minimist') (process.argv.slice (2), {
   default: {
     port: 6379,
-    interval: 5000
+    interval: 10000
   }
 });
 log.debug ('argv:', argv);
@@ -75,10 +75,10 @@ const question = 'tasks.' + process.env.SERVICE_NAME + '.';
         // cleanup lost peers
         for (let peer of peers ) {
             if (!tasks.includes (peer)) {
-                log.warn (`Peer at ${task} lost, removing from peer set`);
+                log.warn (`Peer at ${peer} lost, removing from peer set`);
                 peers.delete (peer);
                 if (client) {
-                    log.info (`Removing REPCILAOF for feer ${peer}...`);
+                    log.info (`Removing REPCILAOF for peer ${peer}...`);
                     await client.write (`REPLICAOF REMOVE ${peer} ${argv.port}\n`);
                 }
             }
