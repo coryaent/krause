@@ -7,20 +7,20 @@ const { execFileSync, spawn } = require ('child_process');
 const connect = require ('socket-retry-connect').waitForSocket;
 const dig = require ('node-dig-dns');
 const log = require ('./logger.js');
+const { networkInterfaces } = require ('os');
 
 /*
     REQUIREMENTS
 */
-
-execFileSync ('datamkown');
+var KeyDB, client, discovery = null;
 
 process.on ('SIGINT', () => {
-    console.warn ('SIGINT ignored, use SIGTERM to exit.');
+    log.warn ('SIGINT ignored, use SIGTERM to exit.');
 });
 
 process.on ('SIGTERM', () => {
     if (KeyDB) KeyDB.kill ();
-    if (keydb) keydb.close ();
+    if (client) client.close ();
     if (discovery) clearInterval (discovery);
 });
 
@@ -29,7 +29,7 @@ log.debug ('Parsing arguments');
 const argv = require ('minimist') (process.argv.slice (2), {
   default: {
     port: 6379,
-    interval: 1000
+    interval: 5000
   }
 });
 log.debug ('argv:', argv);
@@ -37,9 +37,60 @@ log.debug ('argv:', argv);
 /*
     MAIN
 */
-var KeyDB, keydb, discovery = null;
+// populate a set ofipv4 addresses
+const interfaces = networkInterfaces ();
+const ipAddresses = [];
+for (let device of Object.keys (interfaces)) {
+	for (let iface of interfaces[device]) {
+		if (iface.family === 'IPv4') {
+			ipAddresses.push (iface.address);
+		}
+	}
+}
+
+// get tasks/peers
+// task is another process discovered by docker swarm
+// peers is a set of tasks without this instance's IP's
+const peers = new Set ();
+// get ip tasks from domain
+const question = 'tasks.' + process.env.SERVICE_NAME + '.']);
+// automatic discovery
+(function discover () {
+    dig([question]).then (async function main (discovered) {
+        // add peers from found tasks
+        const tasks = discovered['answer'].map (a => a['value']));
+        for (let task of tasks) {
+            // contrast peers and tasks
+            if (!ipAddresses.includes (task)) {
+                log.info (`Found new peer at ${task}, adding to peer set`);
+                peers.add (task);
+                // only run if we already connected to KeyDB socket
+                if (client) {
+                    log.info (`Adding REPLICAOF for peer ${task}...`);
+                    await client.write (`REPLICAOF ${task} ${argv.port}\n`);
+                    log.info (`Peer at ${task} successfully added as a replica, data may still be transferring.`);
+                }
+            }
+        }
+        // cleanup lost peers
+        peers.forEach (peer => {
+            if (!tasks.includes (peer)) {
+                log.warn (`Peer at ${task} lost, removing from peer set`);
+                peers.delete (peer);
+                if (client) {
+                    log.info (`Removing REPCILAOF for feer ${peer}...`);
+                    await client.write (`REPLICAOF REMOVE ${peer} ${argv.port}\n`);
+                }
+            }
+        });
+        log.debug (`Found ${peers.size} peer(s)`);
+    };
+    discovery = setInterval (discover, argv.interval);
+}) ();
 
 // server instance
+log.info (`Creating data directory and changing ownership...`);
+execFileSync ('datamkown');
 log.info ('Spawning KeyDB server...');
 KeyDB = spawn ('keydb-server', [
     '--bind', '0.0.0.0', 
@@ -58,39 +109,14 @@ connect ({
     tries: Infinity,
     port: argv.port
 }, // callback
-    function start (error, connection) {
+    function afterConnection (error, connection) {
         if (error) throw new Error;
         log.info ('KeyDB client connected.');
-        keydb = connection;
+        client = connection;
 
-        // client instance
-        keydb.on ('data', (datum) => {
+        // log KeyDB output to stdout
+        client.on ('data', (datum) => {
             console.log (datum.toString ());
         });
-
-        // automatic discovery
-        const question = 'tasks.' + process.env.SERVICE_NAME + '.';
-        const peers = new Set ();
-        log.info (`Starting DNS discovery at ${question}`);
-        discovery = setInterval (async function discover () {
-            // get a list of all peer ip addresses (call it tasks)
-            const tasks = (await dig ([question]))['answer'].map (a => a['value']);
-            // contrast tasks and peers
-            for (let task of tasks) {
-                if (!peers.has (task)) {
-                    log.info (`Found new peer at ${task}, adding replica...`);
-                    await keydb.write (`REPLICAOF ${task} ${argv.port}\n`);
-                    peers.add (task);
-                    log.info (`Peer at ${task} successfully added as a replica, data may still be transferring.`);
-                }
-            }
-            // cleanup lost peers
-            peers.forEach (peer => {
-                if (!tasks.includes (peer)) {
-                    peers.delete (peer);
-                    log.warn (`Peer at ${task} lost.`);
-                }
-            })
-        }, argv.interval);
     }
 )
