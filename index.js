@@ -84,6 +84,9 @@ const question = 'tasks.' + process.env.SERVICE_NAME + '.';
             }
         };
         log.debug (`Found ${peers.size} peer(s)`);
+    })
+    .catch((error) => {
+        log.error (error);
     });
     discovery = setInterval (discover, argv.interval);
 }) ();
