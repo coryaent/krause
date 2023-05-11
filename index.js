@@ -58,7 +58,7 @@ const question = 'tasks.' + process.env.SERVICE_NAME + '.';
 (function discover () {
     dig([question]).then (async function main (discovered) {
         // add peers from found tasks
-        const tasks = discovered['answer'].map (a => a['value']));
+        const tasks = discovered['answer'].map (a => a['value']);
         for (let task of tasks) {
             // contrast peers and tasks
             if (!ipAddresses.includes (task)) {
@@ -73,7 +73,7 @@ const question = 'tasks.' + process.env.SERVICE_NAME + '.';
             }
         }
         // cleanup lost peers
-        peers.forEach (peer => {
+        for (let peer of peers ) {
             if (!tasks.includes (peer)) {
                 log.warn (`Peer at ${task} lost, removing from peer set`);
                 peers.delete (peer);
@@ -82,9 +82,9 @@ const question = 'tasks.' + process.env.SERVICE_NAME + '.';
                     await client.write (`REPLICAOF REMOVE ${peer} ${argv.port}\n`);
                 }
             }
-        });
+        };
         log.debug (`Found ${peers.size} peer(s)`);
-    };
+    });
     discovery = setInterval (discover, argv.interval);
 }) ();
 
