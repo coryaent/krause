@@ -57,8 +57,7 @@ connect ({
     // options
     tries: Infinity,
     port: argv.port
-}, 
-    // callback
+}, // callback
     function start (error, connection) {
         if (error) throw new Error;
         log.info ('KeyDB client connected.');
@@ -74,6 +73,7 @@ connect ({
         const peers = new Set ();
         log.info (`Starting DNS discovery at ${question}`);
         discovery = setInterval (async function discover () {
+            // get a list of all peer ip addresses (call it tasks)
             const tasks = (await dig ([question]))['answer'].map (a => a['value']);
             // contrast tasks and peers
             for (let task of tasks) {
@@ -92,6 +92,5 @@ connect ({
                 }
             })
         }, argv.interval);
-        
     }
 )
