@@ -5,9 +5,9 @@
 */
 const { execFileSync, spawn } = require ('child_process');
 const connect = require ('socket-retry-connect').waitForSocket;
-const dig = require ('node-dig-dns');
 const log = require ('./logger.js');
 const { networkInterfaces } = require ('os');
+const dns = require('node:dns').promises;
 
 /*
     REQUIREMENTS
@@ -53,12 +53,18 @@ for (let device of Object.keys (interfaces)) {
 // peers is a set of tasks without this instance's IP's
 const peers = new Set ();
 // get ip tasks from domain
-const question = 'tasks.' + process.env.SERVICE_NAME + '.';
+const endpoint = 'tasks.' + process.env.SERVICE_NAME + '.';
 // automatic discovery
 (function discover () {
-    dig([question]).then (async function main (discovered) {
+    dns.lookup(endpoint, {family: 4}).then (async function main (discovered) {
         // add peers from found tasks
-        const tasks = discovered['answer'].map (a => a['value']);
+        const tasks = [];
+        Object.keys (discovered).forEach ((key) => {
+            if (key === 'address') {
+                tasks.push (discovered['address']);
+            }
+        });
+        log.debug (`Got tasks ${tasks}`);
         for (let task of tasks) {
             // contrast peers and tasks
             if (!ipAddresses.includes (task) && !peers.has (task)) {
@@ -112,7 +118,7 @@ connect ({
     tries: Infinity,
     port: argv.port
 }, // callback
-    function afterConnection (error, connection) {
+    function connectCallback (error, connection) {
         if (error) throw new Error;
         log.info ('KeyDB client connected.');
         client = connection;
