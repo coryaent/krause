@@ -45,7 +45,7 @@ COPY --from=keydb-compiler /usr/local/src/datamkown /usr/local/bin/datamkown
 
 COPY . .
 
-RUN apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils redis-tools net-tools && \
+RUN apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils redis-tools net-tools watch && \
 	npm install
 
 ENTRYPOINT node ./index.js
