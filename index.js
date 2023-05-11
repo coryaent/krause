@@ -61,7 +61,7 @@ const question = 'tasks.' + process.env.SERVICE_NAME + '.';
         const tasks = discovered['answer'].map (a => a['value']);
         for (let task of tasks) {
             // contrast peers and tasks
-            if (!ipAddresses.includes (task)) {
+            if (!ipAddresses.includes (task) && !peers.has (task)) {
                 log.info (`Found new peer at ${task}, adding to peer set`);
                 peers.add (task);
                 // only run if we already connected to KeyDB socket
