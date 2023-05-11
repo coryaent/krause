@@ -57,6 +57,7 @@ const endpoint = 'tasks.' + process.env.SERVICE_NAME + '.';
 log.debug ('Hitting endpoint ' + endpoint + ' ...');
 // automatic discovery
 (function discover () {
+    log.debug ('Looking up ' + endpoint);
     dns.lookup(endpoint, {family: 4}).then (async function main (discovered) {
         log.debug ('Hit ' + endpoint);
         // add peers from found tasks
