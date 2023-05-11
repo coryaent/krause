@@ -9,6 +9,8 @@ const log = require ('./logger.js');
 const { networkInterfaces } = require ('os');
 const dns = require('node:dns').promises;
 
+log.debug ('Debugging enabled');
+
 /*
     REQUIREMENTS
 */
