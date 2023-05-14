@@ -48,4 +48,4 @@ COPY . .
 RUN apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils redis-tools net-tools watch && \
 	npm install
 
-ENTRYPOINT node ./index.js
+ENTRYPOINT ["node", "./index.js"]
