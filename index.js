@@ -1,4 +1,4 @@
-9"use strict";
+"use strict";
 
 /*
     PRE-REQUISITES
