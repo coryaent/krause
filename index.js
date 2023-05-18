@@ -79,8 +79,8 @@ const endpoint = 'tasks.' + process.env.SERVICE_NAME + '.';
                 log.debug (`next IP: ${discovered[next]}`);
                 // if client is connected
                 if (client) {
-                    log.info (`Setting REPLICAOF ${discovered[next]}`); 
-                    await client.write (`REPCILAOF ${discovered[next]}\n`);
+                    log.info (`Setting REPLICAOF ${discovered[next]} ${argv.port}`); 
+                    await client.write (`REPCILAOF ${discovered[next]} ${argv.port}\n`);
                 }
             }
         }
