@@ -5,7 +5,7 @@ WORKDIR /usr/local/src
 
 COPY ./datamkown.c ./
 
-RUN VERSION="6.2.0" && \
+RUN VERSION="6.3.3" && \
 	apt-get update && apt-get install -y \
 	build-essential \
 	nasm \
@@ -15,7 +15,11 @@ RUN VERSION="6.2.0" && \
 	tcl tcl-dev \
 	uuid-dev \
 	libssl-dev \
-	libcurl4-openssl-dev \
+    libcurl4-openssl-dev \
+    libbz2-dev \
+    libzstd-dev \
+    liblz4-dev \
+    libsnappy-dev \
 	wget && \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/* && \
