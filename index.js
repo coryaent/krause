@@ -85,7 +85,7 @@ function discover () {
             //}
         //}
         for (let task of discovered) {
-            if (client && !ipAddresses.includes (task) {
+            if (client && !ipAddresses.includes (task)) {
                 log.info (`Setting REPLICAOF ${task} ${argv.port}`);
                 client.write (`REPLICAOF ${task} ${argv.port}\n`);
             }
