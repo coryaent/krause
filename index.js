@@ -51,26 +51,16 @@ for (let device of Object.keys (interfaces)) {
 		}
 	}
 }
+log.debug (`Internal IP addresses ${ipAddresses}`);
 
-// get tasks/peers
-// task is another process discovered by docker swarm
-// peers is a set of tasks without this instance's IP's
-const peers = new Set ();
 // get ip tasks from domain
 const endpoint = 'tasks.' + process.env.SERVICE_NAME + '.';
-log.debug ('Hitting endpoint ' + endpoint + ' ...');
 // automatic discovery
 (function discover () {
-    log.debug ('Looking up ' + endpoint);
-    dns.lookup(endpoint, {family: 4}).then (async function main (discovered) {
-        log.debug ('Hit ' + endpoint);
-        // add peers from found tasks
-        const tasks = [];
-        Object.keys (discovered).forEach ((key) => {
-            if (key === 'address') {
-                tasks.push (discovered['address']);
-            }
-        });
+    log.debug ('Hitting endpoint ' + endpoint + ' ...');
+    dns.lookup (endpoint).then (async function main (discovered) {
+        // found tasks
+        const tasks = discovered;
         log.debug (`Got tasks ${tasks}`);
         for (let task of tasks) {
             // contrast peers and tasks
