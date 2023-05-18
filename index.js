@@ -60,28 +60,34 @@ function discover () {
     log.debug ('Hitting endpoint ' + endpoint + ' ...');
     dns.resolve (endpoint).then (function main (discovered) {
         // sort for consistency (discovered should be the same on all hosts)
-        discovered.sort ();
+        //discovered.sort ();
         log.debug (`Got tasks ${discovered}`);
         // cycle through each host IP
-        for (let ip of ipAddresses) {
+        //for (let ip of ipAddresses) {
             // let i be the index in discovered of the host IP
-            let i = discovered.indexOf (ip)
+            //let i = discovered.indexOf (ip)
             // if the index of the host IP cannot be found i will be -1
-            if (i >= 0) {
+            //if (i >= 0) {
                 // let next be the next index after the index of the host IP
-                let next = i + 1;
+                //let next = i + 1;
                 // if next is beyond the bounds of the array
-                    if (next === discovered.length) {
+                    //if (next === discovered.length) {
                         // the next index is the first member of the array
-                        next = 0;
-                    }
+                        //next = 0;
+                    //}
                 // next is an ip string
-                log.debug (`next IP: ${discovered[next]}`);
+                //log.debug (`next IP: ${discovered[next]}`);
                 // if client is connected
-                if (client) {
-                    log.info (`Setting REPLICAOF ${discovered[next]} ${argv.port}`); 
-                    client.write (`REPLICAOF ${discovered[next]} ${argv.port}\n`);
-                }
+                //if (client) {
+                    //log.info (`Setting REPLICAOF ${discovered[next]} ${argv.port}`); 
+                    //client.write (`REPLICAOF ${discovered[next]} ${argv.port}\n`);
+                //}
+            //}
+        //}
+        for (let task of discovered) {
+            if (client && !ipAddresses.includes (task) {
+                log.info (`Setting REPLICAOF ${task} ${argv.port}`);
+                client.write (`REPLICAOF ${task} ${argv.port}\n`);
             }
         }
     });
@@ -95,6 +101,7 @@ log.info ('Spawning KeyDB server...');
 KeyDB = spawn ('keydb-server', [
     '--bind', '0.0.0.0', 
     '--active-replica', 'yes',
+    '--multi-master', 'yes',
     '--protected-mode', 'no',
     '--databases', argv.databases,
     '--dir', '/data',
