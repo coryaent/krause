@@ -96,9 +96,6 @@ KeyDB = spawn ('keydb-server', [
     '--bind', '0.0.0.0', 
     '--active-replica', 'yes',
     '--protected-mode', 'no',
-    '--replica-read-only', 'no',
-    '--cluster-enabled', 'yes',
-    '--multi-master', 'yes',
     '--databases', argv.databases,
     '--dir', '/data',
     '--port', argv.port
