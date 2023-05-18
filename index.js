@@ -56,9 +56,9 @@ log.debug (`Internal IP addresses ${ipAddresses}`);
 // docker swarm endpoint for resolution
 const endpoint = 'tasks.' + process.env.SERVICE_NAME + '.';
 // automatic discovery
-(function discover () {
+function discover () {
     log.debug ('Hitting endpoint ' + endpoint + ' ...');
-    dns.resolve (endpoint).then (async function main (discovered) {
+    dns.resolve (endpoint).then (function main (discovered) {
         // sort for consistency (discovered should be the same on all hosts)
         discovered.sort ();
         log.debug (`Got tasks ${discovered}`);
@@ -80,13 +80,13 @@ const endpoint = 'tasks.' + process.env.SERVICE_NAME + '.';
                 // if client is connected
                 if (client) {
                     log.info (`Setting REPLICAOF ${discovered[next]} ${argv.port}`); 
-                    await client.write (`REPLICAOF ${discovered[next]} ${argv.port}\n`);
+                    client.write (`REPLICAOF ${discovered[next]} ${argv.port}\n`);
                 }
             }
         }
     });
-    discovery = setInterval (discover, argv.interval);
-}) ();
+}
+discovery = setInterval (discover, argv.interval);
 
 // server instance
 log.info (`Creating data directory and changing ownership...`);
