@@ -53,40 +53,37 @@ for (let device of Object.keys (interfaces)) {
 }
 log.debug (`Internal IP addresses ${ipAddresses}`);
 
-// get ip tasks from domain
+// docker swarm endpoint for resolution
 const endpoint = 'tasks.' + process.env.SERVICE_NAME + '.';
 // automatic discovery
 (function discover () {
     log.debug ('Hitting endpoint ' + endpoint + ' ...');
-    dns.lookup (endpoint).then (async function main (discovered) {
-        // found tasks
-        const tasks = discovered;
-        log.debug (`Got tasks ${tasks}`);
-        for (let task of tasks) {
-            // contrast peers and tasks
-            if (!ipAddresses.includes (task) && !peers.has (task)) {
-                log.info (`Found new peer at ${task}, adding to peer set`);
-                peers.add (task);
-                // only run if we already connected to KeyDB socket
+    dns.resolve (endpoint).then (async function main (discovered) {
+        // sort for consistency (discovered should be the same on all hosts)
+        discovered.sort ();
+        log.debug (`Got tasks ${discovered}`);
+        // cycle through each host IP
+        for (let ip of ipAddresses) {
+            // let i be the index in discovered of the host IP
+            let i = discovered.indexOf (ip)
+            // if the index of the host IP cannot be found i will be -1
+            if (i >= 0) {
+                // let next be the next index after the index of the host IP
+                let next = i + 1;
+                // if next is beyond the bounds of the array
+                    if (next === discovered.length) {
+                        // the next index is the first member of the array
+                        next = 0;
+                    }
+                // next is an ip string
+                log.debug (`next IP: ${discovered[next]}`);
+                // if client is connected
                 if (client) {
-                    log.info (`Adding REPLICAOF for peer ${task}...`);
-                    await client.write (`REPLICAOF ${task} ${argv.port}\n`);
-                    log.info (`Peer at ${task} successfully added as a replica, data may still be transferring.`);
+                    log.info (`Setting REPLICAOF ${discovered[next]}`); 
+                    await client.write (`REPCILAOF ${discovered[next]}\n`);
                 }
             }
         }
-        // cleanup lost peers
-        for (let peer of peers ) {
-            if (!tasks.includes (peer)) {
-                log.warn (`Peer at ${peer} lost, removing from peer set`);
-                peers.delete (peer);
-                if (client) {
-                    log.info (`Removing REPCILAOF for peer ${peer}...`);
-                    await client.write (`REPLICAOF REMOVE ${peer} ${argv.port}\n`);
-                }
-            }
-        };
-        log.debug (`Found ${peers.size} peer(s)`);
     });
     discovery = setInterval (discover, argv.interval);
 }) ();
