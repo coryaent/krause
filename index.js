@@ -30,10 +30,11 @@ process.on ('SIGTERM', () => {
 log.debug ('process.argv:', process.argv);
 log.debug ('Parsing arguments');
 const argv = require ('minimist') (process.argv.slice (2), {
-  default: {
-    port: 6379,
-    interval: 10000
-  }
+    default: {
+        port: 6379,
+        interval: 10000,
+        databases: 16
+    }
 });
 log.debug ('argv:', argv);
 
@@ -108,7 +109,7 @@ KeyDB = spawn ('keydb-server', [
     '--bind', '0.0.0.0', 
     '--active-replica', 'yes',
     '--replica-read-only', 'no',
-    '--databases', '1',
+    '--databases', argv.databases,
     '--dir', '/data',
     '--port', argv.port
 ], { stdio: ['ignore', 'inherit', 'inherit'] });
