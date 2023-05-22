@@ -23,7 +23,7 @@ process.on ('SIGINT', () => {
 
 process.on ('SIGTERM', () => {
     if (KeyDB) KeyDB.kill ();
-    if (client) client.close ();
+    if (client) client.end ();
     if (discovery) clearInterval (discovery);
 });
 
