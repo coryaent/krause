@@ -84,7 +84,7 @@ function discover () {
                 client.write (`REPLICAOF ${task} ${argv.port}\n`);
             }
         }
-    });
+    }).catch ((error) => { log.error (error) });
 }
 discovery = setInterval (discover, argv.interval);
 
