@@ -29,7 +29,7 @@ process.on ('SIGTERM', () => {
 
 log.debug ('process.argv:', process.argv);
 log.debug ('Parsing arguments');
-const argv = ('./argv.js');
+const argv = require ('./argv.js');
 log.debug ('argv:', argv);
 
 /*
