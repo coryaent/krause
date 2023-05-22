@@ -29,13 +29,7 @@ process.on ('SIGTERM', () => {
 
 log.debug ('process.argv:', process.argv);
 log.debug ('Parsing arguments');
-const argv = require ('minimist') (process.argv.slice (2), {
-    default: {
-        port: 6379,
-        interval: 10000,
-        databases: 16
-    }
-});
+const argv = ('./argv.js');
 log.debug ('argv:', argv);
 
 /*
