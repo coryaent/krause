@@ -41,7 +41,7 @@ log.debug ('argv:', argv);
 const interfaces = networkInterfaces ();
 const ipAddresses = [];
 for (let device of Object.keys (interfaces)) {
-    for (let iface of interfaces[device])
+    for (let iface of interfaces[device]) {
         if (iface.family === 'IPv4') {
             ipAddresses.push (iface.address);
         }
