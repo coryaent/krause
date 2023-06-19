@@ -1,4 +1,4 @@
-"use strict";
+-"use strict";
 
 /*
     PRE-REQUISITES
@@ -96,7 +96,7 @@ function discover () {
         }
         // remove old peers
         for (let peer of peers) {
-            if (client && !tasks.includes (peer)) {
+            if (client && !discovered.includes (peer)) {
                 log.info (`Removing REPLICAOF ${peer}`);
                 client.write (`REPLICAOF REMOVE ${peer} 6379`);
             }
