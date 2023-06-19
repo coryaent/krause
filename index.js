@@ -54,7 +54,7 @@ const endpoint = 'tasks.' + process.env.SERVICE_NAME + '.';
 // automatic discovery
 function discover () {
     log.debug ('Hitting endpoint ' + endpoint + ' ...');
-    dns.resolve (endpoint).then (function main (discovered) {
+    dns.resolve (endpoint).then (async function main (discovered) {
         // sort for consistency (discovered should be the same on all hosts)
         //discovered.sort ();
         log.debug (`Got tasks ${discovered}`);
