@@ -1,30 +1,27 @@
-const net = require('net');
 const argv = require ('./argv.js');
+const log = require ('./logger.js');
+const dns = require ('node:dns').promises;
+const Redis = require ('ioredis');
 
-var HOST = '127.0.0.1';
-var PORT = argv.port;
+log.debug ('Performing healthcheck');
 
-var client = new net.Socket();
-client.connect (PORT, HOST, async function sendCommand () {
-    await client.write (`ROLE\n`);
-});
-
-// Add a 'data' event handler for the client socket
-// data is what the server sent to this socket
-client.on ('data', function parseData (data) {
-  // console.log(data.toString ());
-    let response = data.toString ();
-    let resArray = response.split (`\r\n`);
-    if (resArray.includes ('connected')) {
-        process.exitCode = 0;
-    } else {
+dns.resolve (`tasks.${process.env.SERVICE_NAME}.`).then (async function pingRedis () {
+    const redis = new Redis ();
+    let result = await redis.ping ();
+    if (result != 'PONG') {
+        log.debug ('healthcheck could not ping keydb server');
         process.exitCode = 1;
+    } else {
+        log.debug ('healthcheck successfully pinged keydb server');
     }
-    client.end ();
+    log.debug ('healthcheck closing keydb client connection');
+    await redis.disconnect ();
+    log.debug ('healthcheck keydb client closed');
+})
+.catch (async function handleError (error) {
+    if (error.code == 'ENOTFOUND') {
+        log.debug ('healthcheck found no tasks, cluster is bootstrapping');
+    } else {
+        throw error;
+    }
 });
-
-// Add a 'close' event handler for the client socket
-//client.on('close', function() {
-//  console.log('Connection closed with exit code', process.exitCode);
-//});
-

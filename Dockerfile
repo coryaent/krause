@@ -52,6 +52,6 @@ COPY . .
 RUN apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils redis-tools net-tools watch && \
 	npm install
 
-#HEALTHCHECK --start-period=30s CMD node ./healthcheck.js
+HEALTHCHECK CMD node ./healthcheck.js
 
 ENTRYPOINT ["node", "./index.js"]
