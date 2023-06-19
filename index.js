@@ -8,6 +8,8 @@ const connect = require ('socket-retry-connect').waitForSocket;
 const log = require ('./logger.js');
 const { networkInterfaces } = require ('os');
 const dns = require('node:dns').promises;
+const Redis = require ('ioredis');
+const redis = new Redis ();
 
 log.info (`argv: ${process.argv}`);
 log.debug ('Debugging enabled');
@@ -78,10 +80,24 @@ function discover () {
                 //}
             //}
         //}
+        // get existing peers
+        let role = await redis.role ();
+        let peers = [];
+        for (let peer of role) {
+            peers.push (peer[1]);
+        }
+        // add new tasks
         for (let task of discovered) {
-            if (client && !ipAddresses.includes (task)) {
-                log.info (`Setting REPLICAOF ${task} ${argv.port}`);
-                client.write (`REPLICAOF ${task} ${argv.port}\n`);
+            if (client && !ipAddresses.includes (task) && !peers.includes (task)) {
+                log.info (`Setting REPLICAOF ${task} 6379`);
+                client.write (`REPLICAOF ${task} 6379\n`);
+            }
+        }
+        // remove old peers
+        for (let peer of peers) {
+            if (client && !tasks.includes (peer)) {
+                log.info (`Removing REPLICAOF ${peer}`);
+                client.write (`REPLICAOF REMOVE ${peer} 6379`);
             }
         }
     }).catch ((error) => { log.error (error) });
@@ -99,7 +115,7 @@ KeyDB = spawn ('keydb-server', [
     '--protected-mode', 'no',
     '--databases', argv.databases,
     '--dir', '/data',
-    '--port', argv.port
+    '--port', '6379'
 ], { stdio: ['ignore', 'inherit', 'inherit'] });
 
 // client
@@ -107,7 +123,7 @@ log.info ('Connecting as KeyDB client...');
 connect ({
     // options
     tries: Infinity,
-    port: argv.port
+    port: 6379
 }, // callback
     function connectCallback (error, connection) {
         if (error) throw new Error;
