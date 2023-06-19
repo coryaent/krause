@@ -9,7 +9,6 @@ const log = require ('./logger.js');
 const { networkInterfaces } = require ('os');
 const dns = require('node:dns').promises;
 const Redis = require ('ioredis');
-const redis = new Redis ();
 
 log.info (`argv: ${process.argv}`);
 log.debug ('Debugging enabled');
@@ -17,7 +16,7 @@ log.debug ('Debugging enabled');
 /*
     REQUIREMENTS
 */
-var KeyDB, client, discovery = null;
+var KeyDB, client, discovery, redis = null;
 
 process.on ('SIGINT', () => {
     log.warn ('SIGINT ignored, use SIGTERM to exit.');
@@ -27,6 +26,7 @@ process.on ('SIGTERM', () => {
     if (KeyDB) KeyDB.kill ();
     if (client) client.end ();
     if (discovery) clearInterval (discovery);
+    if (redis) redis.disconnect ();
 });
 
 log.debug ('process.argv:', process.argv);
@@ -37,15 +37,15 @@ log.debug ('argv:', argv);
 /*
     MAIN
 */
-// populate a set ofipv4 addresses
+// populate an array of local ipv4 addresses
 const interfaces = networkInterfaces ();
 const ipAddresses = [];
 for (let device of Object.keys (interfaces)) {
-	for (let iface of interfaces[device]) {
-		if (iface.family === 'IPv4') {
-			ipAddresses.push (iface.address);
-		}
-	}
+    for (let iface of interfaces[device])
+        if (iface.family === 'IPv4') {
+            ipAddresses.push (iface.address);
+        }
+    }
 }
 log.debug (`Internal IP addresses ${ipAddresses}`);
 
@@ -55,31 +55,7 @@ const endpoint = 'tasks.' + process.env.SERVICE_NAME + '.';
 function discover () {
     log.debug ('Hitting endpoint ' + endpoint + ' ...');
     dns.resolve (endpoint).then (async function main (discovered) {
-        // sort for consistency (discovered should be the same on all hosts)
-        //discovered.sort ();
         log.debug (`Got tasks ${discovered}`);
-        // cycle through each host IP
-        //for (let ip of ipAddresses) {
-            // let i be the index in discovered of the host IP
-            //let i = discovered.indexOf (ip)
-            // if the index of the host IP cannot be found i will be -1
-            //if (i >= 0) {
-                // let next be the next index after the index of the host IP
-                //let next = i + 1;
-                // if next is beyond the bounds of the array
-                    //if (next === discovered.length) {
-                        // the next index is the first member of the array
-                        //next = 0;
-                    //}
-                // next is an ip string
-                //log.debug (`next IP: ${discovered[next]}`);
-                // if client is connected
-                //if (client) {
-                    //log.info (`Setting REPLICAOF ${discovered[next]} ${argv.port}`); 
-                    //client.write (`REPLICAOF ${discovered[next]} ${argv.port}\n`);
-                //}
-            //}
-        //}
         // get existing peers
         let role = await redis.role ();
         let peers = [];
@@ -101,9 +77,13 @@ function discover () {
                 client.write (`REPLICAOF REMOVE ${peer} 6379`);
             }
         }
-    }).catch ((error) => { log.error (error) });
+    }).catch ((error) => {
+        // do not throw if 0 tasks are discovered
+        if (error.code != 'ENOTFOUND') {
+            throw error;
+        }
+    });
 }
-discovery = setInterval (discover, argv.interval);
 
 // server instance
 log.info (`Creating data directory and changing ownership...`);
@@ -130,6 +110,8 @@ connect ({
         if (error) throw new Error;
         log.info ('KeyDB client connected.');
         client = connection;
+        redis = new Redis ();
+        discovery = setInterval (discover, argv.interval);
 
         // log KeyDB output to stdout
         client.on ('data', (datum) => {
