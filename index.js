@@ -9,6 +9,7 @@ const log = require ('./logger.js');
 const { networkInterfaces } = require ('os');
 const dns = require('node:dns').promises;
 const Redis = require ('ioredis');
+const net = require ('net');
 
 log.info (`argv: ${process.argv}`);
 log.debug ('Debugging enabled');
@@ -57,10 +58,15 @@ function discover () {
     dns.resolve (endpoint).then (async function main (discovered) {
         log.debug (`Got tasks ${discovered}`);
         // get existing peers
+        log.debug ('Checking role...');
         let role = await redis.role ();
         let peers = [];
         for (let peer of role) {
-            peers.push (peer[1]);
+            // role returns an array of arrays where
+            // index 1 of the subarray is the IP
+            if (net.isIPv4 (peer[1])) {
+                peers.push (peer[1]);
+            }
         }
         log.debug (`Got peers ${peers}`);
         // add new tasks
