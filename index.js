@@ -86,6 +86,7 @@ function discover () {
         for (let peer of role) {
             peers.push (peer[1]);
         }
+        log.debug (`Got peers ${peers}`);
         // add new tasks
         for (let task of discovered) {
             if (client && !ipAddresses.includes (task) && !peers.includes (task)) {
