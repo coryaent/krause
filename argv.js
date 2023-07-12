@@ -2,7 +2,7 @@
 
 module.exports = require ('minimist') (process.argv.slice (2), {
     default: {
-        interval: 1000,
+        interval: 10000,
         databases: 16
     }
 });
