@@ -80,7 +80,7 @@ function discover () {
         for (let peer of peers) {
             if (client && !discovered.includes (peer)) {
                 log.info (`Removing REPLICAOF ${peer}`);
-                client.write (`REPLICAOF REMOVE ${peer} 6379`);
+                client.write (`REPLICAOF REMOVE ${peer} 6379\n`);
             }
         }
     }).catch ((error) => {
