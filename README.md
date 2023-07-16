@@ -5,7 +5,7 @@
 Keyes allows one to easily setup an eventually consistent, highly available, Redis-compatible datastore.
 
 ## Overview
-[KeyDB](https://keydb.dev/) is a fork of [Redis](https://redis.io/) which strives to maintain 100% compatibility with the Redis wire protocol. Keyes is a script which assists with running KeyDB on multiple nodes within Docker Swarm by adding automatic discovery to KeyDB.
+[KeyDB](https://keydb.dev/) is a fork of [Redis](https://redis.io/) which strives to maintain 100% [compatibility](https://docs.keydb.dev/docs/compatibility/) with the Redis wire protocol. Keyes is a script which assists with running KeyDB on multiple nodes within Docker Swarm by adding automatic discovery to KeyDB.
 
 Keyes enables automatic discovery by querying Swarm's DNS server for a lookup of ```tasks.<service-name>.``` 
 
