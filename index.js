@@ -91,7 +91,7 @@ function discover () {
     });
 }
 
-// server instance
+// server instance (passing the --save directive disables saving)
 log.info (`Creating data directory and changing ownership...`);
 execFileSync ('datamkown');
 log.info ('Spawning KeyDB server...');
@@ -102,7 +102,8 @@ KeyDB = spawn ('keydb-server', [
     '--protected-mode', 'no',
     '--databases', argv.databases,
     '--dir', '/data',
-    '--port', '6379'
+    '--port', '6379',
+    '--save', ''
 ], { stdio: ['ignore', 'inherit', 'inherit'] });
 
 // client
