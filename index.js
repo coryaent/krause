@@ -103,7 +103,10 @@ KeyDB = spawn ('keydb-server', [
     '--databases', argv.databases,
     '--dir', '/data',
     '--port', '6379',
-    '--save', ''
+    '--save', '',
+    '--repl-diskless-sync', 'yes',
+    '--repl-diskless-load', 'on-empty-db',
+    '--hz', '1'
 ], { stdio: ['ignore', 'inherit', 'inherit'] });
 
 // client
