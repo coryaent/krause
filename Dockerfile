@@ -49,7 +49,7 @@ COPY --from=keydb-compiler /usr/local/src/datamkown /usr/local/bin/datamkown
 
 COPY . .
 
-RUN apt-get update && apt-get install -y libcurl4 libatomic1 && \
+RUN apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils redis-server iproute2 && \
 	npm install
 
 HEALTHCHECK CMD node ./healthcheck.js
