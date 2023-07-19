@@ -125,7 +125,7 @@ connect ({
 
         // log KeyDB output to stdout
         client.on ('data', (datum) => {
-            console.log (datum.toString ());
+            console.log (datum.toString ().trim());
         });
     }
 )
