@@ -1,54 +1,112 @@
-"use strict";
+-"use strict";
 
 /*
     PRE-REQUISITES
 */
 const { execFileSync, spawn } = require ('child_process');
 const connect = require ('socket-retry-connect').waitForSocket;
-const dig = require ('node-dig-dns');
 const log = require ('./logger.js');
+const { networkInterfaces } = require ('os');
+const dns = require('node:dns').promises;
+const Redis = require ('ioredis');
+const net = require ('net');
+
+log.info (`argv: ${process.argv}`);
+log.debug ('Debugging enabled');
 
 /*
     REQUIREMENTS
 */
-
-execFileSync ('datamkown');
+var KeyDB, client, discovery, redis = null;
 
 process.on ('SIGINT', () => {
-    console.warn ('SIGINT ignored, use SIGTERM to exit.');
+    log.warn ('SIGINT ignored, use SIGTERM to exit.');
 });
 
 process.on ('SIGTERM', () => {
     if (KeyDB) KeyDB.kill ();
-    if (keydb) keydb.close ();
+    if (client) client.end ();
     if (discovery) clearInterval (discovery);
+    if (redis) redis.disconnect ();
 });
 
 log.debug ('process.argv:', process.argv);
 log.debug ('Parsing arguments');
-const argv = require ('minimist') (process.argv.slice (2), {
-  default: {
-    port: 6379,
-    interval: 1000
-  }
-});
+const argv = require ('./argv.js');
 log.debug ('argv:', argv);
 
 /*
     MAIN
 */
-var KeyDB, keydb, discovery = null;
+// populate an array of local ipv4 addresses
+const interfaces = networkInterfaces ();
+const ipAddresses = [];
+for (let device of Object.keys (interfaces)) {
+    for (let iface of interfaces[device]) {
+        if (iface.family === 'IPv4') {
+            ipAddresses.push (iface.address);
+        }
+    }
+}
+log.debug (`Internal IP addresses ${ipAddresses}`);
 
-// server instance
+// docker swarm endpoint for resolution
+const endpoint = 'tasks.' + process.env.SERVICE_NAME + '.';
+// automatic discovery
+function discover () {
+    log.debug ('Hitting endpoint ' + endpoint + ' ...');
+    dns.resolve (endpoint).then (async function main (discovered) {
+        log.debug (`Got tasks ${discovered}`);
+        // get existing peers
+        log.debug ('Checking role...');
+        let role = await redis.role ();
+        let peers = [];
+        for (let peer of role) {
+            // role returns an array of arrays where
+            // index 1 of the subarray is the IP
+            if (net.isIPv4 (peer[1])) {
+                peers.push (peer[1]);
+            }
+        }
+        log.debug (`Got peers ${peers}`);
+        // add new tasks
+        for (let task of discovered) {
+            if (client && !ipAddresses.includes (task) && !peers.includes (task)) {
+                log.info (`Setting REPLICAOF ${task} 6379`);
+                client.write (`REPLICAOF ${task} 6379\n`);
+            }
+        }
+        // remove old peers
+        for (let peer of peers) {
+            if (client && !discovered.includes (peer)) {
+                log.info (`Removing REPLICAOF ${peer}`);
+                client.write (`REPLICAOF REMOVE ${peer} 6379\n`);
+            }
+        }
+    }).catch ((error) => {
+        // do not throw if 0 tasks are discovered
+        if (error.code != 'ENOTFOUND') {
+            throw error;
+        }
+    });
+}
+
+// server instance (passing the --save directive disables saving)
+log.info (`Creating data directory and changing ownership...`);
+execFileSync ('datamkown');
 log.info ('Spawning KeyDB server...');
 KeyDB = spawn ('keydb-server', [
     '--bind', '0.0.0.0', 
     '--active-replica', 'yes',
-    '--replica-read-only', 'no',
     '--multi-master', 'yes',
-    '--databases', '1',
+    '--protected-mode', 'no',
+    '--databases', argv.databases,
     '--dir', '/data',
-    '--port', argv.port
+    '--port', '6379',
+    '--save', '',
+    '--repl-diskless-sync', 'yes',
+    '--repl-diskless-load', 'on-empty-db',
+    '--hz', '1'
 ], { stdio: ['ignore', 'inherit', 'inherit'] });
 
 // client
@@ -56,42 +114,18 @@ log.info ('Connecting as KeyDB client...');
 connect ({
     // options
     tries: Infinity,
-    port: argv.port
-}, 
-    // callback
-    function start (error, connection) {
+    port: 6379
+}, // callback
+    function connectCallback (error, connection) {
         if (error) throw new Error;
         log.info ('KeyDB client connected.');
-        keydb = connection;
+        client = connection;
+        redis = new Redis ();
+        discovery = setInterval (discover, argv.interval);
 
-        // client instance
-        keydb.on ('data', (datum) => {
-            console.log (datum.toString ());
+        // log KeyDB output to stdout
+        client.on ('data', (datum) => {
+            console.log (datum.toString ().trim());
         });
-
-        // automatic discovery
-        const question = 'tasks.' + process.env.SERVICE_NAME + '.';
-        const peers = new Set ();
-        log.info (`Starting DNS discovery at ${question}`);
-        discovery = setInterval (async function discover () {
-            const tasks = (await dig ([question]))['answer'].map (a => a['value']);
-            // contrast tasks and peers
-            for (let task of tasks) {
-                if (!peers.has (task)) {
-                    log.info (`Found new peer at ${task}, adding replica...`);
-                    await keydb.write (`REPLICAOF ${task} ${argv.port}\n`);
-                    peers.add (task);
-                    log.info (`Peer at ${task} successfully added as a replica, data may still be transferring.`);
-                }
-            }
-            // cleanup lost peers
-            peers.forEach (peer => {
-                if (!tasks.includes (peer)) {
-                    peers.delete (peer);
-                    log.warn (`Peer at ${task} lost.`);
-                }
-            })
-        }, argv.interval);
-        
     }
 )

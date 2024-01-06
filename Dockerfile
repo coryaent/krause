@@ -5,7 +5,7 @@ WORKDIR /usr/local/src
 
 COPY ./datamkown.c ./
 
-RUN VERSION="6.2.0" && \
+RUN VERSION="6.3.3" && \
 	apt-get update && apt-get install -y \
 	build-essential \
 	nasm \
@@ -15,7 +15,11 @@ RUN VERSION="6.2.0" && \
 	tcl tcl-dev \
 	uuid-dev \
 	libssl-dev \
-	libcurl4-openssl-dev \
+    libcurl4-openssl-dev \
+    libbz2-dev \
+    libzstd-dev \
+    liblz4-dev \
+    libsnappy-dev \
 	wget && \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/* && \
@@ -45,7 +49,9 @@ COPY --from=keydb-compiler /usr/local/src/datamkown /usr/local/bin/datamkown
 
 COPY . .
 
-RUN apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils && \
+RUN apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils redis-server iproute2 && \
 	npm install
 
-ENTRYPOINT node ./index.js
+HEALTHCHECK CMD node ./healthcheck.js
+
+ENTRYPOINT ["node", "./index.js"]

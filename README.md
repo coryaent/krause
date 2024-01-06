@@ -1,37 +1,34 @@
-# Keyj
+# Krause
 
-[![Codacy grade](https://img.shields.io/codacy/grade/62ddb4351baf4fff8c0aec3c9d71d969?style=flat-square)](https://app.codacy.com/gh/stevecorya/keyj/dashboard)
-[![Docker image size](https://img.shields.io/docker/image-size/stevecorya/keyj?style=flat-square)](https://hub.docker.com/r/stevecorya/keyj)
+[![Docker image size](https://img.shields.io/docker/image-size/coryaent/krause?style=flat-square)](https://hub.docker.com/r/coryaent/krause)
 
-Keyj /kidʒ/ allows one to easily setup an eventually consistent, highly available, Redis-compatible datastore.
+Krause allows one to easily setup an eventually consistent, highly available, Redis-compatible datastore. It is suitable as a cache or message broker.
 
 ## Overview
-[KeyDB](https://keydb.dev/) is a fork of [Redis](https://redis.io/) which strives to maintain 100% compatibility with the Redis wire protocol. Keyj is a script which assists with running KeyDB on multiple nodes within Docker Swarm by adding automatic discovery to KeyDB.
+[KeyDB](https://keydb.dev/) is a fork of [Redis](https://redis.io/) which strives to maintain 100% [compatibility](https://docs.keydb.dev/docs/compatibility/) with the Redis wire protocol. Krause is a wrapper which assists with running KeyDB on multiple nodes within Docker Swarm by adding automatic discovery to KeyDB.
 
-Keyj enables automatic discovery by querying Swarm's DNS server for a lookup of ```tasks.<service-name>.``` 
-
-In terms of CAP theorem, keyj is available and partition tolerant. It is not gaurenteed to be consistent.
+Krause enables automatic discovery by querying Swarm's DNS server for a lookup of ```tasks.<service-name>.``` 
 
 ## Example
+```bash
+docker network create --opt encrypted --driver overlay --attachable keydb
+```
 ```yaml
 version: '3.8'
 
 services:
   master: 
-    image: stevecorya/keyj
+    image: coryaent/krause
     environment:
       - SERVICE_NAME={{.Service.Name}}  
     networks:
       - keydb
-    volumes:
-      - data:/data
     deploy:
-      mode: global
+      replicas: 6
+      placement:
+        max_replicas_per_node: 1
 
 networks:
   keydb:
     external: true
-
-volumes:
-  data:
 ```
