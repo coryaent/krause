@@ -1,6 +1,8 @@
 # Krause
 
 [![Docker image size](https://img.shields.io/docker/image-size/coryaent/krause?style=flat-square)](https://hub.docker.com/r/coryaent/krause)
+![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/coryaent/krause?style=flat-square)
+
 
 Krause allows one to easily setup an eventually consistent, highly available, Redis-compatible datastore. It is suitable as a cache or message broker.
 
