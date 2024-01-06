@@ -5,7 +5,7 @@ WORKDIR /usr/local/src
 
 COPY ./datamkown.c ./
 
-RUN VERSION="6.3.3" && \
+RUN VERSION="6.3.4" && \
 	apt-get update && apt-get install -y \
 	build-essential \
 	nasm \
@@ -49,7 +49,7 @@ COPY --from=keydb-compiler /usr/local/src/datamkown /usr/local/bin/datamkown
 
 COPY . .
 
-RUN apt-get update && apt-get install -y libcurl4 libatomic1 dnsutils redis-server iproute2 && \
+RUN apt-get update && apt-get install -y libcurl4 libatomic1 iproute2 && \
 	npm install
 
 HEALTHCHECK CMD node ./healthcheck.js
