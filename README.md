@@ -1,4 +1,4 @@
-# Keyes
+# Krause
 
 [![Docker image size](https://img.shields.io/docker/image-size/coryaent/krause?style=flat-square)](https://hub.docker.com/r/coryaent/krause)
 
