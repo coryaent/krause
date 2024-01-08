@@ -66,7 +66,7 @@ jobs:
       - name: Update Docker Hub information
         uses: meeDamian/sync-readme@v1.0.6
         with:
-          pass: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          pass: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
           description: true
 
       - name: Image digest
