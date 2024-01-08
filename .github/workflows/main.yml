@@ -63,6 +63,12 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
+      - name: Update Docker Hub information
+        uses: meeDamian/sync-readme@v1.0.6
+        with:
+          pass: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          description: true
+
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
 
