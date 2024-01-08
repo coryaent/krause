@@ -64,10 +64,12 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: Update Docker Hub information
-        uses: meeDamian/sync-readme@v1.0.6
+        uses: peter-evans/dockerhub-description@v3
         with:
-          pass: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-          description: true
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          short-description: ${{ github.event.repository.description }}
+          enable-url-completion: true
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
