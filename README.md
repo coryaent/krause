@@ -46,7 +46,7 @@ services:
           - "node.role == worker"
 
   master:
-    image: eqalpha/keydb
+    image: coryaent/keydb
     command: >
       keydb-server
       --bind 0.0.0.0

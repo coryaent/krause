@@ -44,8 +44,10 @@ function discover () {
         log.debug (`Got peers ${peers}`);
         // add new tasks
         for (let taskAddress of discovered) {
-            log.info (`Setting REPLICAOF ${taskAddress} ${process.env.KRAUSE_KEYDB_PORT}`);
-            keydb.replicaof (taskAddress, process.env.KRAUSE_KEYDB_PORT);
+            if (!peers.includes (taskAddress)) {
+                log.info (`Setting REPLICAOF ${taskAddress} ${process.env.KRAUSE_KEYDB_PORT}`);
+                keydb.replicaof (taskAddress, process.env.KRAUSE_KEYDB_PORT);
+            }
         }
         // remove old peers
         for (let peer of peers) {
