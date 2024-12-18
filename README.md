@@ -3,7 +3,6 @@
 [![Docker image size](https://img.shields.io/docker/image-size/coryaent/krause?style=flat-square)](https://hub.docker.com/r/coryaent/krause)
 ![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/coryaent/krause?style=flat-square)
 
-
 Krause allows one to easily setup an eventually consistent, highly available, Redis-compatible datastore. It is suitable as a cache or message broker.
 
 ## Overview
@@ -12,25 +11,85 @@ Krause allows one to easily setup an eventually consistent, highly available, Re
 Krause enables automatic discovery by querying Swarm's DNS server for a lookup of ```tasks.<service-name>.``` 
 
 ## Example
-```bash
-docker network create --opt encrypted --driver overlay --attachable keydb
-```
 ```yaml
 version: '3.8'
 
+x-socket: &socket
+  image: alpine/socat
+  volumes:
+    - /opt/swarm/sockets:/opt/swarm/sockets/
+  networks:
+    - public
+  deploy:
+    mode: global
+    placement:
+      constraints:
+        - "node.role == worker"
+    resources:
+      limits:
+        memory: 32M
+
 services:
-  master: 
+  discovery:
     image: coryaent/krause
     environment:
-      - SERVICE_NAME={{.Service.Name}}  
-    networks:
-      - keydb
+      KRAUSE_KEYDB_SERVICE: '{{index .Service.Labels "com.docker.stack.namespace"}}_master'
+      KRAUSE_KEYDB_PORT: 56379
+      KRAUSE_KEYDB_SOCKET: /opt/swarm/sockets/keydb.sock
+      KRAUSE_DISCOVERY_INTERVAL: 5000
+    volumes:
+      - /opt/swarm/sockets:/opt/swarm/sockets/
     deploy:
-      replicas: 6
+      mode: global
       placement:
-        max_replicas_per_node: 1
+        constraints:
+          - "node.role == worker"
+
+  master:
+    image: eqalpha/keydb
+    command: >
+      keydb-server
+      --bind 0.0.0.0
+      --unixsocket /opt/swarm/sockets/keydb.sock
+      --active-replica yes
+      --multi-master yes
+      --protected-mode no
+      --dir /data
+      --port 56379
+    volumes:
+      - /opt/swarm/sockets:/opt/swarm/sockets/
+      - data:/data
+    networks:
+      - internal
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - "node.role == worker"
+
+  localhost:
+    command: "-d TCP-L:46379,fork,bind=localhost UNIX:/opt/swarm/sockets/keydb.sock"
+    <<: *socket
+
+  gateway:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: "-d TCP-L:46379,fork,bind=host.docker.internal UNIX:/opt/swarm/sockets/keydb.sock"
+    <<: *socket
+
+volumes:
+  data:
+    driver: local
 
 networks:
-  keydb:
-    external: true
+  internal:
+    attachable: true
+    driver: overlay
+    driver_opts:
+      encrypted: "true"
+    name: keydb
+    ipam:
+      driver: default
+      config:
+        - subnet: "10.225.0.0/16"
 ```

@@ -1,57 +1,12 @@
-# KeyDB
-FROM debian:bullseye AS keydb-compiler
-
-WORKDIR /usr/local/src
-
-COPY ./datamkown.c ./
-
-RUN VERSION="6.3.4" && \
-	apt-get update && apt-get install -y \
-	build-essential \
-	nasm \
-	autotools-dev \
-	autoconf \
-	libjemalloc-dev \
-	tcl tcl-dev \
-	uuid-dev \
-	libssl-dev \
-    libcurl4-openssl-dev \
-    libbz2-dev \
-    libzstd-dev \
-    liblz4-dev \
-    libsnappy-dev \
-	wget && \
-	apt-get clean && \
-	rm -rf /var/lib/apt/lists/* && \
-	gcc datamkown.c -o ./datamkown && chmod ug+s ./datamkown && \
-	wget "https://github.com/EQ-Alpha/KeyDB/archive/refs/tags/v${VERSION}.tar.gz" && \
-	tar xvf "v${VERSION}.tar.gz" && \
-	cd "KeyDB-${VERSION}" && \
-	make BUILD_TLS=yes && \
-	cp src/keydb-* /usr/local/bin/
-
-
-
-#####################
-# primary container #
-#####################
 FROM node:lts-bullseye-slim
 
 WORKDIR /usr/local/src
 
-EXPOSE 6379/tcp
-
-STOPSIGNAL SIGTERM
-
-COPY --from=keydb-compiler /usr/local/bin/keydb-server /usr/local/bin/keydb-server
-COPY --from=keydb-compiler /usr/local/bin/keydb-cli /usr/local/bin/keydb-cli
-COPY --from=keydb-compiler /usr/local/src/datamkown /usr/local/bin/datamkown
+EXPOSE 56379/tcp
 
 COPY . .
 
-RUN apt-get update && apt-get install -y libcurl4 libatomic1 iproute2 && \
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y libcurl4 libatomic1 iproute2 && \
 	npm install
-
-HEALTHCHECK CMD node ./healthcheck.js
 
 ENTRYPOINT ["node", "./index.js"]

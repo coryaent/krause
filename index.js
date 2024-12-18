@@ -3,55 +3,28 @@
 /*
     PRE-REQUISITES
 */
-const { execFileSync, spawn } = require ('child_process');
-const connect = require ('socket-retry-connect').waitForSocket;
 const log = require ('./logger.js');
-const { networkInterfaces } = require ('os');
 const dns = require('node:dns').promises;
 const Redis = require ('ioredis');
-const net = require ('net');
-
-log.info (`argv: ${process.argv}`);
-log.debug ('Debugging enabled');
+const net = require ('node:net');
 
 /*
     REQUIREMENTS
 */
-var KeyDB, client, discovery, redis = null;
+var keydb, discovery = null;
 
-process.on ('SIGINT', () => {
-    log.warn ('SIGINT ignored, use SIGTERM to exit.');
-});
+keydb = new Redis (process.env.KRAUSE_KEYDB_SOCKET);
+keydb.once ('connect', () => {
+    discovery = setInterval (discover, process.env.KRAUSE_DISCOVERY_INTERVAL);
+}
 
 process.on ('SIGTERM', () => {
-    if (KeyDB) KeyDB.kill ();
-    if (client) client.end ();
+    if (keydb) keydb.disconnect ();
     if (discovery) clearInterval (discovery);
-    if (redis) redis.disconnect ();
 });
 
-log.debug ('process.argv:', process.argv);
-log.debug ('Parsing arguments');
-const argv = require ('./argv.js');
-log.debug ('argv:', argv);
-
-/*
-    MAIN
-*/
-// populate an array of local ipv4 addresses
-const interfaces = networkInterfaces ();
-const ipAddresses = [];
-for (let device of Object.keys (interfaces)) {
-    for (let iface of interfaces[device]) {
-        if (iface.family === 'IPv4') {
-            ipAddresses.push (iface.address);
-        }
-    }
-}
-log.debug (`Internal IP addresses ${ipAddresses}`);
-
 // docker swarm endpoint for resolution
-const endpoint = 'tasks.' + process.env.SERVICE_NAME + '.';
+const endpoint = 'tasks.' + process.env.KRAUSE_KEYDB_SERVICE + '.';
 // automatic discovery
 function discover () {
     log.debug ('Hitting endpoint ' + endpoint + ' ...');
@@ -59,7 +32,7 @@ function discover () {
         log.debug (`Got tasks ${discovered}`);
         // get existing peers
         log.debug ('Checking role...');
-        let role = await redis.role ();
+        let role = await keydb.role ();
         let peers = [];
         for (let peer of role) {
             // role returns an array of arrays where
@@ -70,17 +43,15 @@ function discover () {
         }
         log.debug (`Got peers ${peers}`);
         // add new tasks
-        for (let task of discovered) {
-            if (client && !ipAddresses.includes (task) && !peers.includes (task)) {
-                log.info (`Setting REPLICAOF ${task} 6379`);
-                client.write (`REPLICAOF ${task} 6379\n`);
-            }
+        for (let taskAddress of discovered) {
+            log.info (`Setting REPLICAOF ${taskAddress} ${process.env.KRAUSE_KEYDB_PORT}`);
+            keydb.replicaof (taskAddress, process.env.KRAUSE_KEYDB_PORT);
         }
         // remove old peers
         for (let peer of peers) {
-            if (client && !discovered.includes (peer)) {
-                log.info (`Removing REPLICAOF ${peer}`);
-                client.write (`REPLICAOF REMOVE ${peer} 6379\n`);
+            if (!discovered.includes (peer)) {
+                log.info (`Removing REPLICAOF ${peer} ${process.env.KRAUSE_KEYDB_PORT}`);
+                keydb.replicaof ('REMOVE', peer, process.end.KRAUSE_KEYDB_PORT);
             }
         }
     }).catch ((error) => {
@@ -90,42 +61,3 @@ function discover () {
         }
     });
 }
-
-// server instance (passing the --save directive disables saving)
-log.info (`Creating data directory and changing ownership...`);
-execFileSync ('datamkown');
-log.info ('Spawning KeyDB server...');
-KeyDB = spawn ('keydb-server', [
-    '--bind', '0.0.0.0', 
-    '--active-replica', 'yes',
-    '--multi-master', 'yes',
-    '--protected-mode', 'no',
-    '--databases', argv.databases,
-    '--dir', '/data',
-    '--port', '6379',
-    '--save', '',
-    '--repl-diskless-sync', 'yes',
-    '--repl-diskless-load', 'on-empty-db',
-    '--hz', '1'
-], { stdio: ['ignore', 'inherit', 'inherit'] });
-
-// client
-log.info ('Connecting as KeyDB client...');
-connect ({
-    // options
-    tries: Infinity,
-    port: 6379
-}, // callback
-    function connectCallback (error, connection) {
-        if (error) throw new Error;
-        log.info ('KeyDB client connected.');
-        client = connection;
-        redis = new Redis ();
-        discovery = setInterval (discover, argv.interval);
-
-        // log KeyDB output to stdout
-        client.on ('data', (datum) => {
-            console.log (datum.toString ().trim());
-        });
-    }
-)
