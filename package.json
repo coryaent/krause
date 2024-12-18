@@ -20,6 +20,6 @@
   "dependencies": {
     "console-log-level": "^1.4.1",
     "fast-date-format": "^2.2.4",
-    "ioredis": "^5.3.2",
+    "ioredis": "^5.3.2"
   }
 }
