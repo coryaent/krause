@@ -16,7 +16,7 @@ var keydb, discovery = null;
 keydb = new Redis (process.env.KRAUSE_KEYDB_SOCKET);
 keydb.once ('connect', () => {
     discovery = setInterval (discover, process.env.KRAUSE_DISCOVERY_INTERVAL);
-}
+})
 
 process.on ('SIGTERM', () => {
     if (keydb) keydb.disconnect ();
