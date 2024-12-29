@@ -7,3 +7,5 @@ tls.js
 playground*
 .gitignore
 *.txt
+LICENSE
+README*
