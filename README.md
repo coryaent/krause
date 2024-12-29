@@ -92,4 +92,7 @@ networks:
       driver: default
       config:
         - subnet: "10.225.0.0/16"
+  public:
+    external: true
+    name: host
 ```
